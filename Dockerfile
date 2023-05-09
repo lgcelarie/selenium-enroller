@@ -1,7 +1,7 @@
 FROM public.ecr.aws/lambda/python:3.10
 WORKDIR /tmp
 # installing the browser
-RUN yum update && install -y wget unzip
+RUN yum update && yum install -y wget unzip
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm && \
 yum localinstall -y google-chrome-stable_current_x86_64.rpm && \
 rm -rf google-chrome-stable_current_x86_64.rpm
@@ -14,12 +14,12 @@ mv chromedriver /usr/bin/chromedriver && \
 chmod +x /usr/bin/chromedriver && \
 rm -rf chromedriver_linux64.zip
 # installing requirements
-# COPY app/requirements.txt  .
-# RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+COPY app/requirements.txt  .
+RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
-# #copy the app code
-# COPY ./app/app.py {$LAMBDA_TASK_ROOT}
+# copy the app code
+COPY ./app/app.py {$LAMBDA_TASK_ROOT}
 
-# CMD ["app.lambda_handler"]
+CMD ["app.lambda_handler"]
 
-CMD ["usr/bin/sh"]
+# CMD ["usr/bin/sh"]
