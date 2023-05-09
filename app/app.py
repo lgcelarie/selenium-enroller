@@ -60,6 +60,15 @@ def lambda_handler(event, context):
             # Envía el formulario
             submit_button = driver.find_element(By.CLASS_NAME, "contact100-form-btn")
             submit_button.click()
+
+            # Esperando respuesta del servidor
+            driver.implicitly_wait(10)
+
+            response = driver.page_source
+            if 'Felicidades, ya te encuentras suscrito a la promoción, se tomarán en cuenta todas las compras que apliquen.' in response:
+                print(f'El formulario para {socio} con promocion {promocion_val} se envió correctamente')
+            else:
+                print('Hubo un error al enviar el formulario para {socio} con promocion {promocion_val}')
         
             # Limpia los campos del formulario para el siguiente cliente
             socio_input.clear()
@@ -68,7 +77,7 @@ def lambda_handler(event, context):
     # Cierra el navegador
     driver.quit()
     
-    # Retorna la respuesta
+    # Devolviendo la respuesta
     response = {
         'statusCode': 200,
         'body': json.dumps({'message': 'Formularios enviados correctamente'})

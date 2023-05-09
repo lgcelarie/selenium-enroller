@@ -15,10 +15,11 @@ chmod +x /usr/bin/chromedriver && \
 rm -rf chromedriver_linux64.zip
 # installing requirements
 COPY app/requirements.txt  .
+COPY app/clientes.json ./mnt/
 RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
 # copy the app code
-COPY ./app/app.py {$LAMBDA_TASK_ROOT}
+COPY app/app.py ${LAMBDA_TASK_ROOT}
 
 CMD ["app.lambda_handler"]
 
