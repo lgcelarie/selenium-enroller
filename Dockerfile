@@ -1,9 +1,9 @@
-FROM public.ecr.aws/lambda/python:3.10
+FROM public.ecr.aws/lambda/python:3.10-x86_64
 WORKDIR /tmp
 # installing the browser
-RUN yum update && yum install -y wget unzip
+RUN yum update -y && yum install -y wget unzip
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm && \
-yum localinstall -y google-chrome-stable_current_x86_64.rpm && \
+yum -y localinstall google-chrome-stable_current_x86_64.rpm && \
 rm -rf google-chrome-stable_current_x86_64.rpm
 # installing the chromedriver
 RUN chromever=$(google-chrome-stable --version | awk -F " " '{print $3}') && \
