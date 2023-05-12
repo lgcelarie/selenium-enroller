@@ -8,3 +8,4 @@ services:
       - "9100:8080"
     environment:
       - TEST_ENV=true
+      - TARGET_URL=https://servicios.comedica.com.sv/ReportaCompraTC-war/

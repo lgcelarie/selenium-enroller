@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
 s3 = boto3.client('s3')
+url = os.getenv("TARGET_URL")
 
 def obtain_promos(driver):
     keywords = ['GAS', 'SUPERMER']
@@ -13,7 +14,6 @@ def obtain_promos(driver):
     # Obteniendo mes y anio actual en mayuscula para busqueda por texto
     current_mont_and_year = datetime.datetime.now().strftime('%B %Y').upper()
 
-    driver.get("https://servicios.comedica.com.sv/ReportaCompraTC-war/")
     select_options = Select(driver.find_element(By.NAME, "promocion")).options
 
     for word in keywords:
@@ -43,6 +43,7 @@ def lambda_handler(event, context):
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     driver = webdriver.Chrome(options=options)
+    driver.get(url)
 
     available_promos = obtain_promos(driver)
     logging.info(f'promos:{available_promos}')
@@ -58,7 +59,7 @@ def lambda_handler(event, context):
         for promo in promociones:
             if promo in available_promos:
             # Encuentra los campos del formulario y los completa
-                driver.get("https://servicios.comedica.com.sv/ReportaCompraTC-war/")
+                driver.get(url)
                 socio_input = driver.find_element(By.NAME, "num_socio")
                 socio_input.send_keys(socio)
                 digitos_input = driver.find_element(By.NAME, "digitos")
