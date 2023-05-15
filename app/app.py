@@ -44,11 +44,10 @@ def lambda_handler(event, context):
     options.add_argument('--disable-dev-shm-usage')
     driver = webdriver.Chrome(options=options)
     driver.get(url)
+    driver.implicitly_wait(3000)
 
     available_promos = obtain_promos(driver)
     logging.info(f'promos:{available_promos}')
-    # Navega a la página web
-    # driver.get("https://servicios.comedica.com.sv/ReportaCompraTC-war/")
 
     # Recorre la lista de clientes y envía el formulario para cada uno
     for cliente in clientes:
@@ -66,13 +65,13 @@ def lambda_handler(event, context):
                 digitos_input.send_keys(digitos)
                 select_promocion = Select(driver.find_element(By.NAME, "promocion"))
                 select_promocion.select_by_visible_text(available_promos[promo])
-
+                driver.implicitly_wait(3000)
                 # Envía el formulario
                 submit_button = driver.find_element(By.CLASS_NAME, "contact100-form-btn")
                 submit_button.click()
 
                 # Esperando respuesta del servidor
-                driver.implicitly_wait(10)
+                driver.implicitly_wait(10000)
 
                 response = driver.page_source
                 if 'Felicidades, ya te encuentras suscrito a la promoción, se tomarán en cuenta todas las compras que apliquen.' in response:
@@ -81,10 +80,6 @@ def lambda_handler(event, context):
                 else:
                     logging.warning(f'Hubo un error al enviar el formulario para {socio} con promocion {available_promos[promo]}')
                     print(f'Hubo un error al enviar el formulario para {socio} con promocion {available_promos[promo]}')
-
-                # Limpia los campos del formulario para el siguiente cliente
-                socio_input.clear()
-                digitos_input.clear()
 
     # Cierra el navegador
     driver.quit()
