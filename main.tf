@@ -1,13 +1,13 @@
 terraform {
-    required_providers {
-      aws = {
-        source = "hashicorp/aws"
-        version = "~>4.0"
-      }
-      docker = {
-        source = "kreuzwerker/docker"
-     }
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~>4.0"
     }
+    docker = {
+      source = "kreuzwerker/docker"
+    }
+  }
 }
 
 data "aws_region" "current" {}
@@ -51,20 +51,20 @@ module "s3_bucket" {
   }
 }
 
-module "lambda_function_from_container_image" {
-  source = "../../"
+module "lambda_function" {
+  source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "${random_pet.this.id}-lambda-from-container-image"
-  description   = "My awesome lambda function from container image"
+  function_name = "lgcelarie-selenium-enroller-lambda"
+  description   = "My enroller function"
 
   create_package = false
 
   ##################
   # Container Image
   ##################
-  image_uri     = module.docker_image.image_uri
-  package_type  = "Image"
-  architectures = ["x86_64"]
+  image_uri    = module.docker_image.image_uri
+  package_type = "Image"
+
 }
 
 module "docker_image" {
@@ -89,11 +89,11 @@ module "docker_image" {
     ]
   })
 
-  image_tag   = "2.0"
-  source_path = "context"
-  build_args = {
-    FOO = "bar"
-  }
+  image_tag = "2.0"
+  # source_path = "context"
+  #   build_args = {
+  #     FOO = "bar"
+  #   }
   platform = "linux/amd64"
 }
 
