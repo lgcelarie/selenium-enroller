@@ -54,17 +54,17 @@ module "s3_bucket" {
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "lgcelarie-selenium-enroller-lambda"
-  description   = "My enroller function"
-  timeout       = 300
+  function_name  = "lgcelarie-selenium-enroller-lambda"
+  description    = "My enroller function"
+  timeout        = 900
   create_package = false
-  publish       = true
+  publish        = true
 
   image_uri    = module.docker_image.image_uri
   package_type = "Image"
 
   environment_variables = {
-    "TARGET_URL" = var.target_url
+    "TARGET_URL"     = var.target_url
     "S3_BUCKET_NAME" = module.s3_bucket.s3_bucket_id
   }
   attach_policy_statements = true
@@ -113,8 +113,8 @@ module "docker_image" {
     ]
   })
 
-  image_tag = "2.0"
-  source_path = "${path.cwd}"
+  image_tag   = "2.01"
+  source_path = path.cwd
   # docker_file_path = "${path.cwd}/Dockerfile"
   #   build_args = {
   #     FOO = "bar"
