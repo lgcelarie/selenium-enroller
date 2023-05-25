@@ -26,7 +26,7 @@ def obtain_promos(driver):
 
 def lambda_handler(event, context):
     # Descarga el archivo clientes.json del bucket S3
-    bucket_name = 'selenium-enroller'
+    bucket_name = os.getenv("S3_BUCKET_NAME")
     file_name = 'clientes.json'
     if os.getenv("TEST_ENV", False):
         file_name = f'mnt/{file_name}'

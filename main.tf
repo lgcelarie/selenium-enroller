@@ -56,14 +56,38 @@ module "lambda_function" {
 
   function_name = "lgcelarie-selenium-enroller-lambda"
   description   = "My enroller function"
-
+  timeout       = 300
   create_package = false
+  publish       = true
 
-  ##################
-  # Container Image
-  ##################
   image_uri    = module.docker_image.image_uri
   package_type = "Image"
+
+  environment_variables = {
+    "TARGET_URL" = var.target_url
+    "S3_BUCKET_NAME" = module.s3_bucket.s3_bucket_id
+  }
+  attach_policy_statements = true
+  policy_statements = {
+    s3_read = {
+      effect = "Allow",
+      actions = [
+        "s3:GetObject"
+      ],
+      resources = ["${module.s3_bucket.s3_bucket_arn}/*"]
+    }
+  }
+
+  allowed_triggers = {
+    EventBridge = {
+      principal  = "events.amazonaws.com"
+      source_arn = module.eventbridge.eventbridge_rule_arns["crons"]
+    }
+  }
+
+  tags = {
+    Name = "selenium-enroller"
+  }
 
 }
 
@@ -90,11 +114,39 @@ module "docker_image" {
   })
 
   image_tag = "2.0"
-  # source_path = "context"
+  source_path = "${path.cwd}"
+  # docker_file_path = "${path.cwd}/Dockerfile"
   #   build_args = {
   #     FOO = "bar"
   #   }
   platform = "linux/amd64"
+}
+
+module "eventbridge" {
+  source = "terraform-aws-modules/eventbridge/aws"
+
+  create_bus = false
+
+  rules = {
+    crons = {
+      description         = "Trigger for Selenium enroller lambda"
+      schedule_expression = "cron(0 8 28 * ? *)"
+    }
+  }
+
+  targets = {
+    crons = [
+      {
+        name  = "selenium-enroller-cron"
+        arn   = module.lambda_function.lambda_function_arn
+        input = jsonencode({ "job" : "cron-by-schedule" })
+      }
+    ]
+  }
+
+  tags = {
+    Name = "selenium-enroller"
+  }
 }
 
 resource "random_pet" "this" {
