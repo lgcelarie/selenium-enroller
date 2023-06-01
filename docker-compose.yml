@@ -9,3 +9,5 @@ services:
     environment:
       - TEST_ENV=true
       - TARGET_URL=https://servicios.comedica.com.sv/ReportaCompraTC-war/
+    volumes:
+      - .:/tmp/mnt

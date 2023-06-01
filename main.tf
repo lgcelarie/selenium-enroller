@@ -113,7 +113,7 @@ module "docker_image" {
     ]
   })
 
-  image_tag   = "2.01"
+  image_tag   = "2.02"
   source_path = path.cwd
   # docker_file_path = "${path.cwd}/Dockerfile"
   #   build_args = {

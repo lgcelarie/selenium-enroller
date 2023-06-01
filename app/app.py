@@ -1,10 +1,14 @@
 import json, datetime, locale, boto3, os, logging
+from tempfile import mkdtemp
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
 s3 = boto3.client('s3')
 url = os.getenv("TARGET_URL")
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 
 def obtain_promos(driver):
     keywords = ['GAS', 'SUPERMER']
@@ -21,7 +25,7 @@ def obtain_promos(driver):
             text = option.text
             if text != None and current_mont_and_year in text and word in text:
                 return_dict[word] = option.text
-
+    logger.info(f'Promociones obtenidas: {return_dict}')
     return return_dict
 
 def lambda_handler(event, context):
@@ -37,17 +41,49 @@ def lambda_handler(event, context):
     with open('/tmp/' + file_name, 'r') as f:
         clientes = json.load(f)
 
+    if len(clientes) < 1:
+        logger.info(f'No hay clientes en el archivo JSON. Finalizando...')
+        return {
+            'statusCode': 200,
+            'body': 'No hay clientes en el archivo JSON.'
+        }
     # Configura el driver de Chrome
     options = webdriver.ChromeOptions()
+    options.binary_location = '/opt/chrome/chrome'
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(options=options)
-    driver.get(url)
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1280x1696")
+    options.add_argument("--single-process")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-dev-tools")
+    options.add_argument("--no-zygote")
+    options.add_argument(f"--user-data-dir={mkdtemp()}")
+    options.add_argument(f"--data-path={mkdtemp()}")
+    options.add_argument(f"--disk-cache-dir={mkdtemp()}")
+    options.add_argument("--remote-debugging-port=9222")
+    options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36')
+    driver = webdriver.Chrome("/opt/chromedriver",
+                              options=options)
+
+    logger.info(f'Getting url: {url}')
+    try:
+        driver.get(url)
+    except Exception as exception:
+        logger.exception(f'Error al intentar acceder a la URL. Detalle del error {exception}')
+        return {
+            'statusCode': 500,
+            'body': exception
+        }
     driver.implicitly_wait(3000)
 
     available_promos = obtain_promos(driver)
-    logging.info(f'promos:{available_promos}')
+    if len(available_promos) < 1:
+        logger.error(f'No se obtuvieron promociones. Finalizando...')
+        return {
+            'statusCode': 500,
+            'body': 'No se pudo obtener data de las promociones'
+        }
 
     # Recorre la lista de clientes y envía el formulario para cada uno
     for cliente in clientes:
