@@ -3,6 +3,7 @@ from tempfile import mkdtemp
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+# from selenium.webdriver.support import ExpectedConditions
 
 s3 = boto3.client('s3')
 url = os.getenv("TARGET_URL")
@@ -75,7 +76,8 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': exception
         }
-    driver.implicitly_wait(3000)
+    driver.implicitly_wait(30)
+    
 
     available_promos = obtain_promos(driver)
     if len(available_promos) < 1:
@@ -101,13 +103,13 @@ def lambda_handler(event, context):
                 digitos_input.send_keys(digitos)
                 select_promocion = Select(driver.find_element(By.NAME, "promocion"))
                 select_promocion.select_by_visible_text(available_promos[promo])
-                driver.implicitly_wait(3000)
+                driver.implicitly_wait(3)
                 # Envía el formulario
                 submit_button = driver.find_element(By.CLASS_NAME, "contact100-form-btn")
                 submit_button.click()
 
                 # Esperando respuesta del servidor
-                driver.implicitly_wait(10000)
+                driver.implicitly_wait(10)
 
                 response = driver.page_source
                 if 'Felicidades, ya te encuentras suscrito a la promoción, se tomarán en cuenta todas las compras que apliquen.' in response:
